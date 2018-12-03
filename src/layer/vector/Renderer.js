@@ -59,10 +59,12 @@ export var Renderer = Layer.extend({
 		this.getPane().appendChild(this._container);
 		this._update();
 		this.on('update', this._updatePaths, this);
+    this.on('rotate', this._update, this);
 	},
 
 	onRemove: function () {
 		this.off('update', this._updatePaths, this);
+    this.off('rotate', this._update, this);
 		this._destroyContainer();
 	},
 
@@ -102,6 +104,12 @@ export var Renderer = Layer.extend({
 		} else {
 			DomUtil.setPosition(this._container, topLeftOffset);
 		}
+    //offset = this._map._latLngToNewLayerPoint(this._topLeft, zoom, center);
+		//if (L.Browser.any3d) {
+		//	L.DomUtil.setTransform(this._container, offset, scale);
+		//} else {
+		//	L.DomUtil.setPosition(this._container, offset);
+    //}
 	},
 
 	_reset: function () {
@@ -129,11 +137,24 @@ export var Renderer = Layer.extend({
 		// Update pixel bounds of renderer container (for positioning/sizing/clipping later)
 		// Subclasses are responsible of firing the 'update' event.
 		var p = this.options.padding,
+		    map = this._map,
 		    size = this._map.getSize(),
 		    min = this._map.containerPointToLayerPoint(size.multiplyBy(-p)).round();
-
-		this._bounds = new Bounds(min, min.add(size.multiplyBy(1 + p * 2)).round());
-
+    		//padMin = size.multiplyBy(-p),
+		    //padMax = size.multiplyBy(1 + p),
+		    // // TODO: Somehow refactor this out into map.something() - the code is
+		    // //   pretty much the same as in GridLayer.
+		    //clip = new L.Bounds([
+			  //  map.containerPointToLayerPoint([padMin.x, padMin.y]).floor(),
+			  //  map.containerPointToLayerPoint([padMin.x, padMax.y]).floor(),
+			  //  map.containerPointToLayerPoint([padMax.x, padMin.y]).floor(),
+			  //  map.containerPointToLayerPoint([padMax.x, padMax.y]).floor()
+		    //]);
+    
+    this._bounds = new Bounds(min, min.add(size.multiplyBy(1 + p * 2)).round());
+    //this._bounds = clip;
+		//this._topLeft = this._map.layerPointToLatLng(clip.min);
+    
 		this._center = this._map.getCenter();
 		this._zoom = this._map.getZoom();
 	}

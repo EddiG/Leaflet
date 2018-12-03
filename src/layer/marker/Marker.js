@@ -107,6 +107,7 @@ export var Marker = Layer.extend({
 
 		this._initIcon();
 		this.update();
+		map.on('rotate', this.update, this);
 	},
 
 	onRemove: function (map) {
@@ -277,7 +278,12 @@ export var Marker = Layer.extend({
 	},
 
 	_setPos: function (pos) {
-		DomUtil.setPosition(this._icon, pos);
+		if (this._map._rotate) {
+			var anchor = this.options.icon.options.iconAnchor || new L.Point(0, 0);
+			DomUtil.setPosition(this._icon, pos, -this._map._bearing || 0, pos.add(anchor));
+		} else {
+			DomUtil.setPosition(this._icon, pos);
+		}
 
 		if (this._shadow) {
 			DomUtil.setPosition(this._shadow, pos);

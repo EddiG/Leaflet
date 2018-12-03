@@ -210,33 +210,43 @@ export function testProp(props) {
 // Resets the 3D CSS transform of `el` so it is translated by `offset` pixels
 // and optionally scaled by `scale`. Does not have an effect if the
 // browser doesn't support 3D CSS transforms.
-export function setTransform(el, offset, scale) {
-	var pos = offset || new Point(0, 0);
+export function setTransform(el, offset, scale, bearing, pivot) {
+		var pos = offset || new L.Point(0, 0);
 
-	el.style[TRANSFORM] =
-		(Browser.ie3d ?
-			'translate(' + pos.x + 'px,' + pos.y + 'px)' :
-			'translate3d(' + pos.x + 'px,' + pos.y + 'px,0)') +
-		(scale ? ' scale(' + scale + ')' : '');
+		if (!bearing) {
+			el.style[L.DomUtil.TRANSFORM] =
+				(L.Browser.ie3d ?
+				'translate(' + pos.x + 'px,' + pos.y + 'px)' :
+				'translate3d(' + pos.x + 'px,' + pos.y + 'px,0)') +
+				(scale ? ' scale(' + scale + ')' : '');
+		} else {
+			pos = pos.rotateFrom(bearing, pivot);
+
+			el.style[L.DomUtil.TRANSFORM] =
+				'translate3d(' + pos.x + 'px,' + pos.y + 'px,0)' +
+				(scale ? ' scale(' + scale + ')' : '') +
+				' rotate(' + bearing + 'rad)';
+		}
 }
 
 // @function setPosition(el: HTMLElement, position: Point)
 // Sets the position of `el` to coordinates specified by `position`,
 // using CSS translate or top/left positioning depending on the browser
 // (used by Leaflet internally to position its layers).
-export function setPosition(el, point) {
+export function setPosition(el, point, bearing, pivot) {
+		// eslint-disable-next-line
+		el._leaflet_pos = point;
 
-	/*eslint-disable */
-	el._leaflet_pos = point;
-	/* eslint-enable */
-
-	if (Browser.any3d) {
-		setTransform(el, point);
-	} else {
-		el.style.left = point.x + 'px';
-		el.style.top = point.y + 'px';
-	}
+		if (L.Browser.any3d) {
+			L.DomUtil.setTransform(el, point, undefined, bearing, pivot);
+		} else {
+			el.style.left = point.x + 'px';
+			el.style.top = point.y + 'px';
+		}
 }
+
+export const DEG_TO_RAD = Math.PI / 180
+export const RAD_TO_DEG = 180 / Math.PI
 
 // @function getPosition(el: HTMLElement): Point
 // Returns the coordinates of an element previously positioned with setPosition.
